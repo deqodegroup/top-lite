@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "ai": "latest",
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
