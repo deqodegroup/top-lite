@@ -17,8 +17,11 @@ export async function askStorm({ message, history = [], allowWeb }) {
       grounded: Boolean(data.grounded),
       provider: data.provider,
       model: data.model,
+      mode: data.mode,
       knowledgeHits: data.knowledgeHits || [],
       webSources: data.webSources || [],
+      trustedSources: data.trustedSources || [],
+      sourceRegistry: data.sourceRegistry || null,
     }
   } catch (error) {
     const fallback = await routeStormMessage({ text: message, language: 'niu' })
@@ -28,6 +31,8 @@ export async function askStorm({ message, history = [], allowWeb }) {
       grounded: false,
       knowledgeHits: [],
       webSources: [],
+      trustedSources: [],
+      sourceRegistry: null,
       error: error instanceof Error ? error.message : String(error),
     }
   }
