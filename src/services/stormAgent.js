@@ -1,11 +1,11 @@
 import { routeStormMessage } from '../core/stormRouter'
 
-export async function askStorm({ message, history = [], verifiedContext = '' }) {
+export async function askStorm({ message, history = [], allowWeb }) {
   try {
     const response = await fetch('/api/storm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, history, verifiedContext }),
+      body: JSON.stringify({ message, history, allowWeb }),
     })
 
     const data = await response.json().catch(() => ({}))
@@ -13,9 +13,12 @@ export async function askStorm({ message, history = [], verifiedContext = '' }) 
 
     return {
       text: data.text,
-      source: 'opendex-gateway',
+      source: 'opendex-runtime',
       grounded: Boolean(data.grounded),
+      provider: data.provider,
       model: data.model,
+      knowledgeHits: data.knowledgeHits || [],
+      webSources: data.webSources || [],
     }
   } catch (error) {
     const fallback = await routeStormMessage({ text: message, language: 'niu' })
@@ -23,6 +26,8 @@ export async function askStorm({ message, history = [], verifiedContext = '' }) 
       text: fallback,
       source: 'local-fallback',
       grounded: false,
+      knowledgeHits: [],
+      webSources: [],
       error: error instanceof Error ? error.message : String(error),
     }
   }
