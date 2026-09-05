@@ -23,5 +23,8 @@ jobs:
           node --check api/tts.js
           node --check lib/opendex-runtime.js
           node --check lib/storm-knowledge.js
+      - name: Smoke STORM local knowledge
+        run: |
+          node --input-type=module -e "import('./lib/storm-knowledge.js').then(({searchKnowledge}) => { const hits = searchKnowledge('hello'); if (!hits.some(x => x.niuean === 'fakaalofa')) process.exit(1); console.log('knowledge smoke: PASS') })"
       - name: Build TOP Lite
         run: npm run build
