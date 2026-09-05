@@ -1,17 +1,16 @@
 export default function StormOrb({ state = 'idle' }) {
   return (
     <div className={`storm-orb storm-orb--${state}`} aria-label={`STORM is ${state}`}>
-      <div className="storm-orb__aura" />
-      <div className="storm-orb__ring storm-orb__ring--outer" />
-      <div className="storm-orb__ring storm-orb__ring--inner" />
-      <div className="storm-orb__core">
-        <div className="storm-orb__glass" />
-        <span className="storm-orb__current storm-orb__current--a" />
-        <span className="storm-orb__current storm-orb__current--b" />
-        <span className="storm-orb__current storm-orb__current--c" />
-        <span className="storm-orb__current storm-orb__current--d" />
+      <div className="storm-orb__glow" />
+      <div className="storm-orb__shell">
+        <div className="storm-orb__rim" />
+        <div className="storm-orb__water storm-orb__water--one" />
+        <div className="storm-orb__water storm-orb__water--two" />
+        <div className="storm-orb__water storm-orb__water--three" />
+        <div className="storm-orb__light" />
+        <div className="storm-orb__core" />
       </div>
-      <div className="storm-orb__shadow" />
+      <div className="storm-orb__reflection" />
     </div>
   )
 }
