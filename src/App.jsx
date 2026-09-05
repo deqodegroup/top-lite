@@ -14,7 +14,7 @@ const quickActions = [
 ]
 
 const stateLabels = {
-  idle: 'Ready to listen',
+  idle: 'Ready to talk',
   listening: 'Listening…',
   thinking: 'Thinking…',
   speaking: 'Speaking…',
@@ -27,54 +27,99 @@ export default function App() {
   const [messages, setMessages] = useState([])
   const [state, setState] = useState('idle')
   const [listening, setListening] = useState(false)
+  const [voiceSession, setVoiceSession] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const recognitionRef = useRef(null)
+  const messagesRef = useRef([])
+  const voiceSessionRef = useRef(false)
+  const stateRef = useRef('idle')
   const Recognition = useMemo(() => getSpeechRecognition(), [])
-  const busy = state === 'thinking' || state === 'speaking'
+  const thinking = state === 'thinking'
+
+  function updateState(next) {
+    stateRef.current = next
+    setState(next)
+  }
+
+  function updateMessages(updater) {
+    setMessages((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      messagesRef.current = next
+      return next
+    })
+  }
+
+  function setVoiceSessionActive(active) {
+    voiceSessionRef.current = active
+    setVoiceSession(active)
+  }
 
   async function sendMessage(text = input, { speakReply = true } = {}) {
     const clean = text.trim()
-    if (!clean || busy) return
+    if (!clean || stateRef.current === 'thinking') return
 
     stopSpeaking()
-    const history = messages
-    setMessages((prev) => [...prev, { role: 'user', text: clean }])
+    const history = messagesRef.current
+    updateMessages((prev) => [...prev, { role: 'user', text: clean }])
     setInput('')
-    setState('thinking')
+    updateState('thinking')
 
-    const result = await askStorm({ message: clean, history })
+    const result = await askStorm({ message: clean, history, allowWeb: true })
     const reply = result.text
-    setMessages((prev) => [...prev, { role: 'storm', text: reply, source: result.source, grounded: result.grounded }])
+    updateMessages((prev) => [...prev, {
+      role: 'storm',
+      text: reply,
+      source: result.source,
+      grounded: result.grounded,
+      webSources: result.webSources || [],
+    }])
 
     if (!speakReply) {
-      setState('idle')
+      updateState('idle')
       return
     }
 
     await speak(reply, {
-      onStart: () => setState('speaking'),
-      onEnd: () => setState('idle'),
-      onError: () => setState('idle'),
+      onStart: () => updateState('speaking'),
+      onEnd: () => {
+        updateState('idle')
+        if (voiceSessionRef.current) window.setTimeout(() => startListening({ auto: true }), 180)
+      },
+      onError: () => {
+        updateState('idle')
+        if (voiceSessionRef.current) window.setTimeout(() => startListening({ auto: true }), 180)
+      },
     })
   }
 
-  function startListening() {
-    if (!Recognition || busy) return
+  function startListening({ auto = false } = {}) {
+    if (!Recognition || stateRef.current === 'thinking') return
+
+    // Barge-in: tapping/speaking while STORM is talking immediately stops playback.
+    if (stateRef.current === 'speaking') {
+      stopSpeaking()
+      updateState('idle')
+    }
 
     if (listening && recognitionRef.current) {
-      recognitionRef.current.stop()
+      if (!auto) {
+        setVoiceSessionActive(false)
+        recognitionRef.current.stop()
+      }
       return
     }
+
+    if (!auto) setVoiceSessionActive(true)
 
     stopSpeaking()
     const recognition = new Recognition()
     recognition.continuous = false
     recognition.interimResults = true
-    recognition.lang = 'en-NZ'
+    recognition.lang = language === 'niu' ? 'en-NZ' : 'en-US'
 
     recognition.onstart = () => {
       setListening(true)
-      setState('listening')
+      updateState('listening')
     }
 
     recognition.onresult = (event) => {
@@ -82,22 +127,56 @@ export default function App() {
       setInput(transcript)
       const finalResult = event.results[event.results.length - 1]
       if (finalResult?.isFinal && transcript) {
-        window.setTimeout(() => sendMessage(transcript, { speakReply: true }), 120)
+        recognitionRef.current = null
+        setListening(false)
+        window.setTimeout(() => sendMessage(transcript, { speakReply: true }), 80)
       }
     }
 
-    recognition.onerror = () => {
+    recognition.onerror = (event) => {
+      recognitionRef.current = null
       setListening(false)
-      setState('idle')
+      updateState('idle')
+      if (voiceSessionRef.current && event.error !== 'not-allowed' && event.error !== 'service-not-allowed') {
+        window.setTimeout(() => startListening({ auto: true }), 500)
+      } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        setVoiceSessionActive(false)
+      }
     }
 
     recognition.onend = () => {
+      recognitionRef.current = null
       setListening(false)
-      setState((current) => current === 'listening' ? 'idle' : current)
+      if (stateRef.current === 'listening') updateState('idle')
     }
 
     recognitionRef.current = recognition
-    recognition.start()
+    try {
+      recognition.start()
+    } catch {
+      recognitionRef.current = null
+      setListening(false)
+      updateState('idle')
+    }
+  }
+
+  function endVoiceSession() {
+    setVoiceSessionActive(false)
+    stopSpeaking()
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop() } catch {}
+      recognitionRef.current = null
+    }
+    setListening(false)
+    updateState('idle')
+  }
+
+  function handleTalk() {
+    if (voiceSession) {
+      endVoiceSession()
+      return
+    }
+    startListening()
   }
 
   function toggleHistory() {
@@ -125,14 +204,15 @@ export default function App() {
         <div className="storm-identity">
           <h1>STORM</h1>
           <p className={`storm-status storm-status--${state}`}><span />{stateLabels[state]}</p>
+          {voiceSession && <p className="voice-session-note">Voice session active · tap Talk to end</p>}
         </div>
 
         <ModeToggle mode={mode} onChange={setMode} />
-        {mode === 'avatar' && <p className="avatar-note">Avatar mode shares the same STORM voice session. Visual renderer is the next layer.</p>}
+        {mode === 'avatar' && <p className="avatar-note">Avatar mode shares the same live STORM conversation.</p>}
 
         <div className="quick-actions" aria-label="Quick actions">
           {quickActions.map((action) => (
-            <button key={action.label} type="button" onClick={() => sendMessage(action.prompt)} disabled={busy}>
+            <button key={action.label} type="button" onClick={() => sendMessage(action.prompt)} disabled={thinking}>
               {action.label}<span>›</span>
             </button>
           ))}
@@ -144,6 +224,13 @@ export default function App() {
               <div key={`${message.role}-${index}`} className={`message message--${message.role}`}>
                 {message.role === 'storm' && <span className="message__label">STORM</span>}
                 <p>{message.text}</p>
+                {message.role === 'storm' && message.webSources?.length > 0 && (
+                  <div className="message__sources">
+                    {message.webSources.slice(0, 3).map((source) => (
+                      <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.title}</a>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -156,10 +243,10 @@ export default function App() {
           onChange={setInput}
           onSubmit={() => sendMessage(input, { speakReply: false })}
           listening={listening}
-          onMic={startListening}
+          onMic={() => startListening()}
           canListen={Boolean(Recognition)}
-          onTalk={startListening}
-          busy={busy}
+          onTalk={handleTalk}
+          busy={thinking}
         />
       </div>
 
