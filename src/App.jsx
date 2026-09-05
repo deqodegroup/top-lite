@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Menu, Sparkles } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import TopMark from './components/TopMark'
 import LanguagePicker from './components/LanguagePicker'
 import StormOrb from './components/StormOrb'
@@ -7,7 +7,7 @@ import Composer from './components/Composer'
 import { getSpeechRecognition, speak } from './services/voice'
 import { routeStormMessage } from './core/stormRouter'
 
-const starters = ['Teach me a greeting', 'How do I say good morning?', 'Practise pronunciation']
+const starters = ['Teach me a greeting', 'Help with pronunciation', 'Translate a phrase', 'Tell me about Niue culture']
 
 export default function App() {
   const [language, setLanguage] = useState('niu')
@@ -30,7 +30,7 @@ export default function App() {
       setState('speaking')
       speak(reply)
       window.setTimeout(() => setState('idle'), 1600)
-    }, 420)
+    }, 360)
   }
 
   function startListening() {
@@ -63,32 +63,34 @@ export default function App() {
 
   return (
     <main className="app-shell">
-      <div className="ambient ambient--one" />
-      <div className="ambient ambient--two" />
+      <div className="ocean-wash ocean-wash--left" />
+      <div className="ocean-wash ocean-wash--right" />
+
       <header className="topbar">
         <TopMark />
         <div className="topbar__right">
           <LanguagePicker selected={language} onChange={setLanguage} />
-          <button className="icon-button" type="button" aria-label="Menu"><Menu size={19}/></button>
+          <button className="glass-icon" type="button" aria-label="Menu"><Menu size={18}/></button>
         </div>
       </header>
 
-      <section className="experience">
-        <div className="hero-copy">
-          <div className="eyebrow"><Sparkles size={14}/> Niue-first language intelligence</div>
-          <h1>Speak with <span>STORM.</span></h1>
-          <p>Learn, listen and practise Vagahau Niue through a calm conversational experience.</p>
+      <section className="stage">
+        <div className="identity-line">
+          <span>POWERED BY</span>
+          <strong>STORM</strong>
+          <small>PEOPLE · LANGUAGE · OCEAN · FUTURE</small>
         </div>
 
         <StormOrb state={state} />
-        <div className="storm-status">{state === 'idle' ? 'Ready' : state.charAt(0).toUpperCase() + state.slice(1)}</div>
 
-        <div className={`conversation ${messages.length ? 'has-messages' : ''}`}>
-          {messages.length === 0 ? (
-            <div className="starter-row">
-              {starters.map((starter) => <button key={starter} type="button" onClick={() => sendMessage(starter)}>{starter}</button>)}
-            </div>
-          ) : (
+        <div className="stage-copy">
+          <p className="stage-kicker">LISTEN · LEARN · SPEAK · PRESERVE</p>
+          <h1>A living language.<br/>A brighter tomorrow.</h1>
+          <p className="stage-sub">Your cultural language companion for Vagahau Niue.</p>
+        </div>
+
+        <div className="conversation">
+          {messages.length > 0 && (
             <div className="message-list" aria-live="polite">
               {messages.map((message, index) => (
                 <div key={`${message.role}-${index}`} className={`message message--${message.role}`}>
@@ -98,6 +100,12 @@ export default function App() {
               ))}
             </div>
           )}
+        </div>
+
+        <div className="starter-row">
+          {starters.map((starter) => (
+            <button key={starter} type="button" onClick={() => sendMessage(starter)}>{starter}</button>
+          ))}
         </div>
       </section>
 
@@ -111,7 +119,7 @@ export default function App() {
           canListen={Boolean(Recognition)}
           onVoiceMode={voiceMode}
         />
-        <p className="footnote">TOP Lite · STORM may make mistakes. Community validation remains essential.</p>
+        <p className="footnote">TOP Lite · Vagahau Niue first · Community validation remains essential</p>
       </div>
     </main>
   )
