@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "updated": "2026-09-06",
+  "policy": "Niue-first trusted sources are persistent anchors. STORM may use the wider live web for general and current questions and should return source URLs with web-grounded answers.",
+  "sources": [
+    {
+      "id": "nzalt-vagahau-niue-level-1-2024",
+      "title": "Vagahau Niue NCEA Level 1 Vocabulary List (January 2024)",
+      "publisher": "New Zealand Association of Language Teachers",
+      "url": "https://nzalt.org.nz/assets/L1-vocab-lists/VAGAHAU-NIUE-Level-1.pdf",
+      "landing_url": "https://nzalt.org.nz/ncea/2024-new-ncea-vocabulary-lists-level-1",
+      "type": "language-vocabulary",
+      "priority": "verified"
+    },
+    {
+      "id": "ncea-vagahau-niue",
+      "title": "Vagahau Niue",
+      "publisher": "NCEA Education",
+      "url": "https://ncea.education.govt.nz/learning-languages/vagahau-niue",
+      "type": "education",
+      "priority": "verified"
+    },
+    {
+      "id": "mpp-vagahau-niue-orthography-2024",
+      "title": "Vagahau Niue Orthography Guidelines",
+      "publisher": "Ministry for Pacific Peoples",
+      "url": "https://www.mpp.govt.nz/assets/Resources/Orthography-guidelines/vagahau-niue-orthography-guidelines.pdf",
+      "landing_url": "https://mpia.govt.nz/publications-resources/resources/orthography-guidelines/",
+      "type": "language-orthography",
+      "priority": "verified"
+    },
+    {
+      "id": "nzqa-vagahau-niue",
+      "title": "Vagahau Niue",
+      "publisher": "New Zealand Qualifications Authority",
+      "url": "https://www2.nzqa.govt.nz/ncea/subjects/select-subject/vagahau-niue/",
+      "type": "education-assessment",
+      "priority": "trusted"
+    },
+    {
+      "id": "government-niue",
+      "title": "Government of Niue",
+      "publisher": "Government of Niue",
+      "url": "https://www.gov.nu/",
+      "type": "government",
+      "priority": "primary"
+    },
+    {
+      "id": "government-niue-information",
+      "title": "Government of Niue Information and Vagahau Niue Laws",
+      "publisher": "Government of Niue",
+      "url": "https://gov.nu/information",
+      "type": "government-law-language",
+      "priority": "primary"
+    },
+    {
+      "id": "taoga-niue",
+      "title": "Tāoga Niue",
+      "publisher": "Government of Niue",
+      "url": "https://gov.nu/agencies",
+      "type": "culture-language-authority",
+      "priority": "primary"
+    },
+    {
+      "id": "pacific-data-hub",
+      "title": "Pacific Data Hub",
+      "publisher": "Pacific Community (SPC)",
+      "url": "https://pacificdata.org/",
+      "type": "regional-data",
+      "priority": "trusted"
+    },
+    {
+      "id": "statistics-niue",
+      "title": "Statistics Niue",
+      "publisher": "Government of Niue",
+      "url": "https://niuestatistics.nu/",
+      "type": "official-statistics",
+      "priority": "primary"
+    }
+  ]
+}
