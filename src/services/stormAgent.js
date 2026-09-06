@@ -1,5 +1,29 @@
 import { routeStormMessage } from '../core/stormRouter'
 
+async function askWebOnly(message) {
+  const response = await fetch('/api/web', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message }),
+  })
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok || !data.text) throw new Error(data.error || 'Web fallback unavailable')
+
+  return {
+    text: data.text,
+    source: 'web-only-fallback',
+    grounded: Boolean(data.grounded),
+    provider: data.provider,
+    model: null,
+    mode: data.mode || 'web-only-offline',
+    knowledgeHits: [],
+    webSources: data.webSources || [],
+    trustedSources: [],
+    sourceRegistry: null,
+  }
+}
+
 export async function askStorm({ message, history = [], allowWeb }) {
   try {
     const response = await fetch('/api/storm', {
@@ -23,7 +47,13 @@ export async function askStorm({ message, history = [], allowWeb }) {
       trustedSources: data.trustedSources || [],
       sourceRegistry: data.sourceRegistry || null,
     }
-  } catch (error) {
+  } catch (stormError) {
+    if (allowWeb !== false) {
+      try {
+        return await askWebOnly(message)
+      } catch {}
+    }
+
     const fallback = await routeStormMessage({ text: message, language: 'niu' })
     return {
       text: fallback,
@@ -33,7 +63,7 @@ export async function askStorm({ message, history = [], allowWeb }) {
       webSources: [],
       trustedSources: [],
       sourceRegistry: null,
-      error: error instanceof Error ? error.message : String(error),
+      error: stormError instanceof Error ? stormError.message : String(stormError),
     }
   }
 }
