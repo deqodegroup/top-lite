@@ -1,6 +1,7 @@
 # TOP Lite — Handoff State
 
 ## Current state
+- Founder direction for the 2026-09-06 deployment pass: verify the latest standalone `main` build and deploy it to the existing TOP Lite Vercel project without further clarification. The main TOP repository remains protected and out of scope.
 - Standalone repo: active.
 - DQ Universal / ICM bootstrap: complete.
 - Apple-inspired product design source of truth: complete.
