@@ -37,6 +37,7 @@ export default function App() {
   const [avatarVideoUrl, setAvatarVideoUrl] = useState('')
   const recognitionRef = useRef(null)
   const messagesRef = useRef([])
+  const responseIdRef = useRef(null)
   const voiceSessionRef = useRef(false)
   const stateRef = useRef('idle')
   const restartTimerRef = useRef(null)
@@ -122,12 +123,18 @@ export default function App() {
 
     clearRestartTimer()
     stopSpeaking()
-    const history = messagesRef.current
     updateMessages((prev) => [...prev, { role: 'user', text: clean }])
     setInput('')
     updateState('thinking')
 
-    const result = await askStorm({ message: clean, history, allowWeb: true })
+    const result = await askStorm({
+      message: clean,
+      previousResponseId: responseIdRef.current,
+      allowWeb: true,
+    })
+
+    if (result.responseId) responseIdRef.current = result.responseId
+
     const reply = result.text
     updateMessages((prev) => [
       ...prev,
@@ -270,6 +277,7 @@ export default function App() {
 
   function newChat() {
     endVoiceSession()
+    responseIdRef.current = null
     updateMessages([])
     setInput('')
     setMode('chat')
