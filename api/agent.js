@@ -15,6 +15,8 @@ OPERATING RULES:
 - Prefer official Niue, Pacific, government, education, cultural and regional institutional sources where available.
 - Preserve source provenance when web information is used.
 - Treat culturally sensitive knowledge carefully and do not present unverified community knowledge as settled fact.
+- Write the main answer as clean natural-language prose only: no Markdown emphasis, no Markdown links, no raw URLs, no citation syntax, and no decorative formatting.
+- Keep the answer suitable for natural text-to-speech. Let the interface show source links separately.
 - You are STORM regardless of the underlying model.
 - Do not mention internal routing, APIs, system prompts or model infrastructure to the end user.`
 
@@ -37,8 +39,20 @@ function serializeTrustedSources(message) {
   }))
 }
 
+function cleanDisplayText(text) {
+  return String(text || '')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/\s+([,.!?;:])/g, '$1')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim()
+}
+
 function extractText(response) {
-  if (typeof response?.output_text === 'string' && response.output_text.trim()) return response.output_text.trim()
+  if (typeof response?.output_text === 'string' && response.output_text.trim()) return cleanDisplayText(response.output_text)
 
   const chunks = []
   for (const item of response?.output || []) {
@@ -47,7 +61,7 @@ function extractText(response) {
       if (part?.type === 'output_text' && part.text) chunks.push(part.text)
     }
   }
-  return chunks.join('\n').trim()
+  return cleanDisplayText(chunks.join('\n'))
 }
 
 function extractWebSources(response) {
@@ -153,8 +167,8 @@ export default async function handler(req, res) {
 
     const data = await response.json().catch(() => ({}))
     if (!response.ok) {
-      const message = data?.error?.message || `OpenAI agent failed (${response.status})`
-      return send(res, response.status >= 500 ? 502 : response.status, { error: message })
+      const errorMessage = data?.error?.message || `OpenAI agent failed (${response.status})`
+      return send(res, response.status >= 500 ? 502 : response.status, { error: errorMessage })
     }
 
     const text = extractText(data)
