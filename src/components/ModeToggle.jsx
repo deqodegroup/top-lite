@@ -1,24 +1,24 @@
 export default function ModeToggle({ mode, onChange }) {
+  const modes = [
+    { id: 'chat', label: 'Chat' },
+    { id: 'voice', label: 'Voice' },
+    { id: 'avatar', label: 'Avatar' },
+  ]
+
   return (
     <div className="mode-toggle" role="tablist" aria-label="STORM mode">
-      <button
-        type="button"
-        role="tab"
-        aria-selected={mode === 'voice'}
-        className={mode === 'voice' ? 'active' : ''}
-        onClick={() => onChange('voice')}
-      >
-        Voice
-      </button>
-      <button
-        type="button"
-        role="tab"
-        aria-selected={mode === 'avatar'}
-        className={mode === 'avatar' ? 'active' : ''}
-        onClick={() => onChange('avatar')}
-      >
-        Avatar
-      </button>
+      {modes.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          role="tab"
+          aria-selected={mode === item.id}
+          className={mode === item.id ? 'active' : ''}
+          onClick={() => onChange(item.id)}
+        >
+          {item.label}
+        </button>
+      ))}
     </div>
   )
 }
