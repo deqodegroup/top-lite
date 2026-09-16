@@ -35,37 +35,57 @@ function speakBrowser(text, { onStart, onEnd, onError } = {}) {
   })
 }
 
-export async function speak(text, callbacks = {}) {
-  stopSpeaking()
-
+export async function synthesizeVoice(text) {
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), 12000)
   try {
     const response = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
+      signal: controller.signal,
     })
+    if (!response.ok) throw new Error('STORM voice unavailable')
+    return await response.blob()
+  } finally {
+    window.clearTimeout(timeout)
+  }
+}
 
-    if (!response.ok) throw new Error('Premium voice unavailable')
-    const blob = await response.blob()
-    const url = URL.createObjectURL(blob)
-    const audio = new Audio(url)
-    activeAudio = audio
+async function playAudioBlob(blob, callbacks = {}) {
+  const url = URL.createObjectURL(blob)
+  const audio = new Audio(url)
+  activeAudio = audio
 
-    return await new Promise((resolve) => {
-      audio.onplay = () => callbacks.onStart?.('premium')
-      audio.onended = () => {
-        URL.revokeObjectURL(url)
-        activeAudio = null
-        callbacks.onEnd?.('premium')
-        resolve(true)
-      }
-      audio.onerror = () => {
-        URL.revokeObjectURL(url)
-        activeAudio = null
-        resolve(false)
-      }
-      audio.play().catch(() => resolve(false))
-    }).then(async (ok) => ok || speakBrowser(text, callbacks))
+  return await new Promise((resolve) => {
+    audio.onplay = () => callbacks.onStart?.('premium')
+    audio.onended = () => {
+      URL.revokeObjectURL(url)
+      activeAudio = null
+      callbacks.onEnd?.('premium')
+      resolve(true)
+    }
+    audio.onerror = () => {
+      URL.revokeObjectURL(url)
+      activeAudio = null
+      callbacks.onError?.(new Error('Audio playback failed'))
+      resolve(false)
+    }
+    audio.play().catch((error) => {
+      URL.revokeObjectURL(url)
+      activeAudio = null
+      callbacks.onError?.(error)
+      resolve(false)
+    })
+  })
+}
+
+export async function speak(text, callbacks = {}) {
+  stopSpeaking()
+  try {
+    const blob = await synthesizeVoice(text)
+    const ok = await playAudioBlob(blob, callbacks)
+    return ok || speakBrowser(text, callbacks)
   } catch {
     return speakBrowser(text, callbacks)
   }
