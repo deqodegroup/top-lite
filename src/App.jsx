@@ -1,12 +1,14 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { History, Menu, Plus, X } from 'lucide-react'
 import TopMark from './components/TopMark'
 import LanguagePicker from './components/LanguagePicker'
 import ModeToggle from './components/ModeToggle'
 import StormOrb from './components/StormOrb'
+import AvatarFace from './components/AvatarFace'
 import Composer from './components/Composer'
-import { getSpeechRecognition, speak, stopSpeaking } from './services/voice'
+import { getSpeechRecognition, speak, stopSpeaking, synthesizeVoice } from './services/voice'
 import { askStorm } from './services/stormAgent'
+import { avatarConfig, avatarRuntimeConfigured, checkAvatarRuntime, renderAvatarAudio } from './services/avatar'
 
 const starters = [
   'Teach me a greeting',
@@ -31,13 +33,32 @@ export default function App() {
   const [listening, setListening] = useState(false)
   const [voiceSession, setVoiceSession] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  const [avatarReady, setAvatarReady] = useState(false)
+  const [avatarVideoUrl, setAvatarVideoUrl] = useState('')
   const recognitionRef = useRef(null)
   const messagesRef = useRef([])
   const voiceSessionRef = useRef(false)
   const stateRef = useRef('idle')
   const restartTimerRef = useRef(null)
+  const sessionTimerRef = useRef(null)
+  const avatarVideoRef = useRef('')
   const Recognition = useMemo(() => getSpeechRecognition(), [])
   const thinking = state === 'thinking'
+
+  useEffect(() => {
+    if (mode !== 'avatar') return
+    if (!avatarRuntimeConfigured()) {
+      setAvatarReady(false)
+      return
+    }
+    const controller = new AbortController()
+    checkAvatarRuntime(controller.signal).then((result) => setAvatarReady(Boolean(result.ready)))
+    return () => controller.abort()
+  }, [mode])
+
+  useEffect(() => () => {
+    if (avatarVideoRef.current) URL.revokeObjectURL(avatarVideoRef.current)
+  }, [])
 
   function updateState(next) {
     stateRef.current = next
@@ -55,6 +76,12 @@ export default function App() {
   function setVoiceSessionActive(active) {
     voiceSessionRef.current = active
     setVoiceSession(active)
+    if (sessionTimerRef.current) window.clearTimeout(sessionTimerRef.current)
+    sessionTimerRef.current = null
+    if (active) {
+      const { sessionMs } = avatarConfig()
+      sessionTimerRef.current = window.setTimeout(() => endVoiceSession(), Math.max(60_000, sessionMs))
+    }
   }
 
   function clearRestartTimer() {
@@ -66,6 +93,27 @@ export default function App() {
     clearRestartTimer()
     if (!voiceSessionRef.current) return
     restartTimerRef.current = window.setTimeout(() => startListening({ auto: true }), delay)
+  }
+
+  function setAvatarVideo(blob) {
+    if (avatarVideoRef.current) URL.revokeObjectURL(avatarVideoRef.current)
+    const url = URL.createObjectURL(blob)
+    avatarVideoRef.current = url
+    setAvatarVideoUrl(url)
+  }
+
+  async function speakWithAvatar(reply) {
+    if (!avatarReady) return false
+    try {
+      const audioBlob = await synthesizeVoice(reply)
+      const videoBlob = await renderAvatarAudio(audioBlob)
+      setAvatarVideo(videoBlob)
+      updateState('speaking')
+      return true
+    } catch {
+      setAvatarReady(false)
+      return false
+    }
   }
 
   async function sendMessage(text = input, { speakReply = false } = {}) {
@@ -92,9 +140,15 @@ export default function App() {
       },
     ])
 
-    if (!speakReply && !voiceSessionRef.current) {
+    const shouldSpeak = speakReply || voiceSessionRef.current || mode === 'avatar'
+    if (!shouldSpeak) {
       updateState('idle')
       return
+    }
+
+    if (mode === 'avatar') {
+      const avatarStarted = await speakWithAvatar(reply)
+      if (avatarStarted) return
     }
 
     await speak(reply, {
@@ -186,7 +240,10 @@ export default function App() {
 
   function endVoiceSession() {
     clearRestartTimer()
-    setVoiceSessionActive(false)
+    if (sessionTimerRef.current) window.clearTimeout(sessionTimerRef.current)
+    sessionTimerRef.current = null
+    voiceSessionRef.current = false
+    setVoiceSession(false)
     stopSpeaking()
     if (recognitionRef.current) {
       try { recognitionRef.current.stop() } catch {}
@@ -204,6 +261,11 @@ export default function App() {
   function handleModeChange(nextMode) {
     setMode(nextMode)
     if (nextMode === 'chat') endVoiceSession()
+  }
+
+  function handleAvatarEnded() {
+    updateState('idle')
+    scheduleListen()
   }
 
   function newChat() {
@@ -248,10 +310,14 @@ export default function App() {
           <section className={`storm-stage storm-stage--${mode} ${messages.length ? 'storm-stage--compact' : ''}`} aria-label="STORM presence">
             <div className="storm-stage__halo" aria-hidden="true" />
             <div className="storm-presence">
-              <StormOrb state={state} mode={mode} />
+              {mode === 'avatar' ? (
+                <AvatarFace videoUrl={avatarVideoUrl} state={state} ready={avatarReady} onEnded={handleAvatarEnded} />
+              ) : (
+                <StormOrb state={state} mode={mode} />
+              )}
             </div>
             <div className="storm-stage__meta">
-              <span>{mode === 'avatar' ? 'Avatar mode' : mode === 'voice' ? 'Voice mode' : 'Conversational mode'}</span>
+              <span>{mode === 'avatar' ? (avatarReady ? 'Avatar mode · connected' : 'Avatar mode · voice fallback') : mode === 'voice' ? 'Voice mode' : 'Conversational mode'}</span>
               <strong>STORM</strong>
             </div>
           </section>
@@ -307,7 +373,7 @@ export default function App() {
           {voiceSession && (
             <div className="voice-banner">
               <span className="voice-banner__pulse" />
-              Live voice conversation with STORM
+              Lite voice session · 5 minute window
               <button type="button" onClick={endVoiceSession}>End</button>
             </div>
           )}
