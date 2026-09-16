@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { History, Menu, Plus, X } from 'lucide-react'
 import TopMark from './components/TopMark'
 import LanguagePicker from './components/LanguagePicker'
+import ModeToggle from './components/ModeToggle'
 import StormOrb from './components/StormOrb'
 import Composer from './components/Composer'
 import { getSpeechRecognition, speak, stopSpeaking } from './services/voice'
@@ -23,6 +24,7 @@ const stateLabels = {
 
 export default function App() {
   const [language, setLanguage] = useState('niu')
+  const [mode, setMode] = useState('chat')
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState([])
   const [state, setState] = useState('idle')
@@ -195,18 +197,26 @@ export default function App() {
   }
 
   function handleTalk() {
+    if (mode === 'chat') setMode('voice')
     voiceSessionRef.current ? endVoiceSession() : startListening()
+  }
+
+  function handleModeChange(nextMode) {
+    setMode(nextMode)
+    if (nextMode === 'chat') endVoiceSession()
   }
 
   function newChat() {
     endVoiceSession()
     updateMessages([])
     setInput('')
+    setMode('chat')
     setShowHistory(false)
   }
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell app-shell--${mode}`}>
+      <div className="future-grid" aria-hidden="true" />
       <div className="ambient ambient--one" />
       <div className="ambient ambient--two" />
 
@@ -225,20 +235,29 @@ export default function App() {
         <header className="workspace__header">
           <div className="workspace__title">
             <span>TOP Lite</span>
-            <small>Powered by STORM</small>
+            <small>STORM · Pacific language intelligence</small>
           </div>
           <div className="workspace__tools">
+            <ModeToggle mode={mode} onChange={handleModeChange} />
             <span className={`status-pill status-pill--${state}`}><i />{stateLabels[state]}</span>
             <LanguagePicker selected={language} onChange={setLanguage} />
           </div>
         </header>
 
         <div className={`chat-canvas ${messages.length ? 'chat-canvas--active' : ''}`}>
+          <section className={`storm-stage storm-stage--${mode} ${messages.length ? 'storm-stage--compact' : ''}`} aria-label="STORM presence">
+            <div className="storm-stage__halo" aria-hidden="true" />
+            <div className="storm-presence">
+              <StormOrb state={state} mode={mode} />
+            </div>
+            <div className="storm-stage__meta">
+              <span>{mode === 'avatar' ? 'Avatar mode' : mode === 'voice' ? 'Voice mode' : 'Conversational mode'}</span>
+              <strong>STORM</strong>
+            </div>
+          </section>
+
           {messages.length === 0 ? (
             <div className="welcome-state">
-              <div className="storm-presence">
-                <StormOrb state={state} />
-              </div>
               <div className="welcome-copy">
                 <span className="eyebrow">Vagahau Niue · voice + chat</span>
                 <h1>Fakaalofa lahi atu.</h1>
