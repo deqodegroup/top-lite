@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "policy": "Only explicitly approved public sources may be fetched automatically. Automated ingestion produces review candidates only; no candidate becomes verified TOP knowledge without promotion and validation.",
+  "sources": [
+    {
+      "source_id": "ncea-vagahau-niue",
+      "enabled": true,
+      "mode": "review-candidates",
+      "content": "html",
+      "max_chars": 50000,
+      "notes": "Official education page. Extract short candidate lines only; retain source URL and capture date."
+    },
+    {
+      "source_id": "government-niue-information",
+      "enabled": true,
+      "mode": "review-candidates",
+      "content": "html",
+      "max_chars": 50000,
+      "notes": "Primary Government of Niue information page. Candidate extraction only."
+    },
+    {
+      "source_id": "nzqa-vagahau-niue",
+      "enabled": true,
+      "mode": "review-candidates",
+      "content": "html",
+      "max_chars": 50000,
+      "notes": "Official assessment resource. Candidate extraction only."
+    },
+    {
+      "source_id": "nzalt-vagahau-niue-level-1-2024",
+      "enabled": false,
+      "mode": "manual-review",
+      "content": "pdf",
+      "notes": "Do not bulk-ingest PDF automatically. Curate factual vocabulary entries with provenance after rights/source review."
+    },
+    {
+      "source_id": "mpp-vagahau-niue-orthography-2024",
+      "enabled": false,
+      "mode": "manual-review",
+      "content": "pdf",
+      "notes": "Orthography guidance is authoritative but should be curated deliberately rather than copied wholesale."
+    }
+  ]
+}

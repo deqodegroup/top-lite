@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "language:ingest": "node scripts/ingest-language.mjs"
   },
   "dependencies": {
     "ai": "latest",
