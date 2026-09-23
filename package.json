@@ -10,7 +10,12 @@
     "language:ingest": "node scripts/ingest-language.mjs"
   },
   "dependencies": {
+    "@livekit/components-react": "^2.9.14",
+    "@livekit/components-styles": "^1.1.6",
+    "@livekit/protocol": "^1.42.0",
     "ai": "latest",
+    "livekit-client": "^2.15.6",
+    "livekit-server-sdk": "^2.19.1",
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
