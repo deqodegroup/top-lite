@@ -6,6 +6,7 @@ import ModeToggle from './components/ModeToggle'
 import StormOrb from './components/StormOrb'
 import AvatarFace from './components/AvatarFace'
 import Composer from './components/Composer'
+import LiveKitVoiceSession from './components/LiveKitVoiceSession'
 import { getSpeechRecognition, speak, stopSpeaking, synthesizeVoice } from './services/voice'
 import { askStorm } from './services/stormAgent'
 import { avatarConfig, avatarRuntimeConfigured, checkAvatarRuntime, renderAvatarAudio } from './services/avatar'
@@ -262,7 +263,23 @@ export default function App() {
 
   function handleTalk() {
     if (mode === 'chat') setMode('voice')
-    voiceSessionRef.current ? endVoiceSession() : startListening()
+    if (voiceSessionRef.current) {
+      endVoiceSession()
+      return
+    }
+    stopSpeaking()
+    setVoiceSessionActive(true)
+    updateState('thinking')
+  }
+
+  function handleLiveKitDisconnected() {
+    if (voiceSessionRef.current) setVoiceSessionActive(false)
+    updateState('idle')
+  }
+
+  function handleLiveKitError() {
+    if (voiceSessionRef.current) setVoiceSessionActive(false)
+    updateState('idle')
   }
 
   function handleModeChange(nextMode) {
@@ -286,6 +303,13 @@ export default function App() {
 
   return (
     <main className={`app-shell app-shell--${mode}`}>
+      <LiveKitVoiceSession
+        active={voiceSession}
+        onState={updateState}
+        onConnected={() => updateState('listening')}
+        onDisconnected={handleLiveKitDisconnected}
+        onError={handleLiveKitError}
+      />
       <div className="future-grid" aria-hidden="true" />
       <div className="ambient ambient--one" />
       <div className="ambient ambient--two" />
@@ -381,7 +405,7 @@ export default function App() {
           {voiceSession && (
             <div className="voice-banner">
               <span className="voice-banner__pulse" />
-              Lite voice session · 5 minute window
+              Live voice · 5 minute window
               <button type="button" onClick={endVoiceSession}>End</button>
             </div>
           )}
