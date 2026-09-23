@@ -19,7 +19,7 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Check STORM runtime syntax
         run: |
-          node --check api/storm.js
+          node --check api/agent.js
           node --check api/tts.js
           node --check lib/opendex-runtime.js
           node --check lib/storm-knowledge.js
