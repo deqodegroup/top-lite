@@ -46,6 +46,7 @@ export default function App() {
   const avatarVideoRef = useRef('')
   const Recognition = useMemo(() => getSpeechRecognition(), [])
   const thinking = state === 'thinking'
+  const liveKitVoiceEnabled = import.meta.env.VITE_LIVEKIT_VOICE_ENABLED === 'true'
 
   useEffect(() => {
     if (mode !== 'avatar') return
@@ -267,9 +268,19 @@ export default function App() {
       endVoiceSession()
       return
     }
+
     stopSpeaking()
-    setVoiceSessionActive(true)
-    updateState('thinking')
+
+    // LiveKit remains an optional upgrade path. Until a dedicated TOP Lite
+    // LiveKit agent is deployed and configured, use the reliable browser
+    // speech-recognition -> STORM agent -> OpenAI TTS loop.
+    if (liveKitVoiceEnabled) {
+      setVoiceSessionActive(true)
+      updateState('thinking')
+      return
+    }
+
+    startListening()
   }
 
   function handleLiveKitDisconnected() {
@@ -304,7 +315,7 @@ export default function App() {
   return (
     <main className={`app-shell app-shell--${mode}`}>
       <LiveKitVoiceSession
-        active={voiceSession}
+        active={voiceSession && liveKitVoiceEnabled}
         onState={updateState}
         onConnected={() => updateState('listening')}
         onDisconnected={handleLiveKitDisconnected}
