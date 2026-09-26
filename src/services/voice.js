@@ -1,4 +1,7 @@
+import { startLevelMeter, startSyntheticLevel } from './voiceLevel'
+
 let activeAudio = null
+let stopMeter = null
 
 export function getSpeechRecognition() {
   if (typeof window === 'undefined') return null
@@ -6,6 +9,8 @@ export function getSpeechRecognition() {
 }
 
 export function stopSpeaking() {
+  stopMeter?.()
+  stopMeter = null
   if (activeAudio) {
     activeAudio.pause()
     activeAudio.src = ''
@@ -28,9 +33,9 @@ function speakBrowser(text, { onStart, onEnd, onError } = {}) {
     utterance.rate = 0.9
     utterance.pitch = 0.96
     utterance.lang = 'en-NZ'
-    utterance.onstart = () => onStart?.('browser')
-    utterance.onend = () => { onEnd?.('browser'); resolve(true) }
-    utterance.onerror = (event) => { onError?.(event); resolve(false) }
+    utterance.onstart = () => { stopMeter?.(); stopMeter = startSyntheticLevel(); onStart?.('browser') }
+    utterance.onend = () => { stopMeter?.(); stopMeter = null; onEnd?.('browser'); resolve(true) }
+    utterance.onerror = (event) => { stopMeter?.(); stopMeter = null; onError?.(event); resolve(false) }
     window.speechSynthesis.speak(utterance)
   })
 }
@@ -58,14 +63,16 @@ async function playAudioBlob(blob, callbacks = {}) {
   activeAudio = audio
 
   return await new Promise((resolve) => {
-    audio.onplay = () => callbacks.onStart?.('premium')
+    audio.onplay = () => { stopMeter?.(); stopMeter = startLevelMeter(audio); callbacks.onStart?.('premium') }
     audio.onended = () => {
+      stopMeter?.(); stopMeter = null
       URL.revokeObjectURL(url)
       activeAudio = null
       callbacks.onEnd?.('premium')
       resolve(true)
     }
     audio.onerror = () => {
+      stopMeter?.(); stopMeter = null
       URL.revokeObjectURL(url)
       activeAudio = null
       callbacks.onError?.(new Error('Audio playback failed'))

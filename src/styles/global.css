@@ -417,3 +417,5 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+
+.machine-note { display: block; margin-top: 6px; font-size: 11px; letter-spacing: .02em; color: var(--muted, #6b7a90); }

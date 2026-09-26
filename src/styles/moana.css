@@ -1,0 +1,208 @@
+/* TOP Lite — "Moana" ocean-black canvas + Apple Liquid Glass materials.
+   Founder decision 2026-09-26 (see docs/DESIGN.md). Imported last so it overrides the light theme.
+
+   Material rules (Apple Design Option):
+   - interactive/small surfaces: light translucent glass (blur + saturate, bright top edge)
+   - structural/large surfaces: darker, heavier glass with a deeper shadow
+   - never stack a light glass surface on another light glass surface
+   - reduced-transparency / high-contrast / reduced-motion fall back to solid, defined surfaces */
+
+:root {
+  --ocean: #0b0914;
+  --ocean-2: #120e22;
+  --gold: #c9a84c;
+  --purple: #6b35a8;
+  --teal: #1bbfbf;
+  --coral: #e8593c;
+
+  --ink: #f5f2ec;
+  --muted: rgba(245, 242, 236, 0.62);
+  --line: rgba(255, 255, 255, 0.12);
+
+  --glass: rgba(255, 255, 255, 0.07);
+  --glass-strong: rgba(255, 255, 255, 0.11);
+  --glass-heavy: rgba(18, 14, 34, 0.62);
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.26), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  --blur: blur(24px) saturate(180%);
+  --blur-heavy: blur(40px) saturate(170%);
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+
+  --future-ink: var(--ink);
+  --future-muted: var(--muted);
+  --future-glass: var(--glass);
+  --future-glass-strong: var(--glass-strong);
+
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--ocean);
+  color-scheme: dark;
+}
+
+html, body, #root { background: var(--ocean); }
+
+.app-shell {
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 36%, rgba(107, 53, 168, 0.26), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 50% 105%, rgba(27, 191, 191, 0.12), transparent 70%),
+    radial-gradient(ellipse 45% 40% at 90% 0%, rgba(201, 168, 76, 0.06), transparent 70%),
+    var(--ocean);
+}
+.future-grid, .ambient { opacity: 0.12; filter: none; }
+.future-grid { background-image: none; }
+.ambient { display: none; }
+
+/* ── structural glass (heavy) ─────────────────────────────── */
+.rail {
+  background: var(--glass-heavy);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  backdrop-filter: var(--blur-heavy);
+  border-right: 1px solid var(--glass-edge);
+  box-shadow: none;
+}
+.workspace__header {
+  background: linear-gradient(180deg, rgba(11, 9, 20, 0.72), rgba(11, 9, 20, 0));
+  border-bottom: 0;
+  box-shadow: none;
+}
+.workspace__title span { color: var(--ink); letter-spacing: -0.01em; }
+.workspace__title small { color: var(--gold); }
+.top-mark { color: var(--ink); }
+.top-mark__t { display: block; font-family: "Cormorant Garamond", "Iowan Old Style", Georgia, serif; font-weight: 500; font-size: 46px; line-height: 1; letter-spacing: 0; padding-top: 2px; }
+.rail__logo { margin-top: 6px; }
+.rail__logo:hover .top-mark { color: var(--gold); }
+.rail__logo { transition: transform 100ms ease-out; }
+.rail__logo:active { transform: scale(0.95); }
+.history-panel {
+  background: var(--glass-heavy);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  backdrop-filter: var(--blur-heavy);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-hi), var(--shadow);
+  color: var(--ink);
+}
+.history-panel__head strong { color: var(--ink); }
+.history-panel__head small, .history-empty { color: var(--muted); }
+.history-panel__head button { background: var(--glass-strong); color: var(--ink); }
+.history-item p { color: var(--muted); }
+.history-item small { color: var(--gold); }
+
+/* ── interactive glass (light) ─────────────────────────────── */
+.status-pill, .mode-toggle, .language-trigger, .rail__menu, .rail__actions button, .workspace__tools button,
+.starter-grid button, .voice-banner, .thread-sources a {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-hi);
+  color: var(--ink);
+}
+.status-pill { color: var(--muted); }
+.status-pill i { background: var(--muted); box-shadow: none; }
+.status-pill--listening i { background: var(--teal); }
+.status-pill--speaking i, .status-pill--thinking i { background: var(--gold); }
+.mode-toggle button { color: var(--muted); }
+.mode-toggle button.active, .mode-toggle button[aria-pressed='true'] {
+  background: var(--glass-strong);
+  color: var(--ink);
+  box-shadow: var(--glass-hi);
+}
+.language-menu {
+  background: var(--glass-heavy);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  backdrop-filter: var(--blur-heavy);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-hi), var(--shadow);
+}
+.language-menu__title { color: var(--ink); border-bottom-color: var(--line); }
+.language-menu button { color: var(--ink); }
+.language-menu button:hover:not(:disabled), .language-menu button.active { background: var(--glass-strong); color: var(--gold); }
+.language-menu button:disabled { color: var(--muted); }
+.language-menu small { background: var(--glass-strong); color: var(--muted); }
+
+/* ── content ─────────────────────────────────────────────── */
+.eyebrow { color: var(--gold); letter-spacing: 0.16em; }
+.welcome-copy h1 {
+  color: var(--ink);
+  font-family: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+.welcome-copy p { color: var(--muted); }
+.starter-grid button { color: var(--ink); transition: transform 100ms ease-out, background 0.2s, border-color 0.2s; }
+.starter-grid button:hover { background: var(--glass-strong); color: var(--ink); border-color: rgba(201, 168, 76, 0.45); box-shadow: var(--glass-hi); transform: translateY(-1px); }
+.starter-grid button:active { transform: scale(0.97); }
+
+.thread-row--user .thread-message { background: var(--glass-strong); color: var(--ink); border: 1px solid var(--glass-edge); box-shadow: var(--glass-hi); }
+.thread-row--storm .thread-message { color: var(--ink); }
+.thread-message strong { color: var(--gold); }
+.thread-sources a { color: var(--muted); }
+.thinking-dots span { background: var(--muted); }
+.machine-note { color: var(--muted); }
+.storm-stage__meta span { color: var(--muted); }
+.storm-stage__meta strong { color: var(--ink); letter-spacing: 0.32em; }
+.storm-stage__halo { background: radial-gradient(circle, rgba(107, 53, 168, 0.34), rgba(27, 191, 191, 0.08) 48%, transparent 70%); opacity: 1; }
+
+/* ── composer: the hero glass ────────────────────────────── */
+.composer-dock {
+  background: linear-gradient(180deg, rgba(11, 9, 20, 0), rgba(11, 9, 20, 0.78) 45%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.composer-shell,
+.composer {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  backdrop-filter: var(--blur-heavy);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-hi), var(--shadow);
+}
+.composer:focus-within { border-color: rgba(201, 168, 76, 0.55); box-shadow: var(--glass-hi), var(--shadow), 0 0 0 4px rgba(201, 168, 76, 0.08); }
+.composer input { color: var(--ink); }
+.composer input::placeholder { color: var(--muted); }
+.composer__mic { color: var(--muted); }
+.composer__mic:hover:not(:disabled) { background: var(--glass-strong); color: var(--ink); }
+.composer__mic.is-listening { color: var(--teal); background: rgba(27, 191, 191, 0.14); box-shadow: 0 0 0 5px rgba(27, 191, 191, 0.08); }
+.composer__send, .composer__talk {
+  color: var(--ink);
+  background: linear-gradient(145deg, #7d43c0, var(--purple) 55%, #4a2278);
+  border: 1px solid rgba(201, 168, 76, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 22px rgba(107, 53, 168, 0.4);
+}
+.composer__talk.is-listening { background: linear-gradient(145deg, #23d3cc, var(--teal) 60%, #0f8f8f); color: #06202a; }
+.composer__send:active, .composer__talk:active, .composer__mic:active { transform: scale(0.95); }
+.composer-note { color: rgba(245, 242, 236, 0.4); }
+.voice-banner button { background: var(--glass-strong); color: var(--ink); }
+.voice-banner__pulse { background: var(--teal); box-shadow: 0 0 0 4px rgba(27, 191, 191, 0.14); }
+
+/* focus that survives dark glass */
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+/* ── STORM orb ───────────────────────────────────────────── */
+.storm-stage { min-height: auto; padding-bottom: 46px; }
+.storm-stage .storm-presence { width: min(40vh, 84vw, 420px); height: min(40vh, 84vw, 420px); margin: 0; }
+.storm-stage--compact .storm-presence { transform: scale(0.62); transform-origin: 50% 40%; }
+.storm-orb-gl { width: 100%; height: 100%; pointer-events: none; }
+.thread-avatar__orb { background: radial-gradient(circle at 36% 30%, #fff 0 12%, #a98ad8 32%, var(--purple) 64%, #2a1250 100%); box-shadow: inset 4px 4px 8px rgba(255, 255, 255, 0.35), 0 0 12px rgba(107, 53, 168, 0.5); }
+
+/* ── accessibility fallbacks (Apple: reduced transparency / contrast / motion) ── */
+@media (prefers-reduced-transparency: reduce) {
+  .rail, .history-panel, .language-menu, .composer, .status-pill, .mode-toggle, .language-trigger,
+  .starter-grid button, .voice-banner, .thread-sources a, .thread-row--user .thread-message {
+    -webkit-backdrop-filter: none; backdrop-filter: none; background: #1b1430;
+  }
+}
+@media (prefers-contrast: more) {
+  :root { --glass-edge: rgba(255, 255, 255, 0.45); --muted: rgba(245, 242, 236, 0.85); }
+  .rail, .history-panel, .language-menu, .composer { background: #14102a; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .starter-grid button, .composer__send, .composer__talk { transition: none; }
+}
+
+@media (max-width: 760px) {
+  .storm-stage .storm-presence { width: min(27vh, 62vw); height: min(27vh, 62vw); }
+  .storm-stage { padding-bottom: 40px; }
+}

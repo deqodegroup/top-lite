@@ -9,6 +9,8 @@ import Composer from './components/Composer'
 import LiveKitVoiceSession from './components/LiveKitVoiceSession'
 import { getSpeechRecognition, speak, stopSpeaking, synthesizeVoice } from './services/voice'
 import { askStorm } from './services/stormAgent'
+import { getMachineLanguages, translateMachine } from './services/translate'
+import { languages } from './data/languages'
 import { avatarConfig, avatarRuntimeConfigured, checkAvatarRuntime, renderAvatarAudio } from './services/avatar'
 
 const starters = [
@@ -28,6 +30,7 @@ const stateLabels = {
 export default function App() {
   const [language, setLanguage] = useState('niu')
   const [mode, setMode] = useState('chat')
+  const [machineLangs, setMachineLangs] = useState([])
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState([])
   const [state, setState] = useState('idle')
@@ -58,6 +61,17 @@ export default function App() {
     checkAvatarRuntime(controller.signal).then((result) => setAvatarReady(Boolean(result.ready)))
     return () => controller.abort()
   }, [mode])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    getMachineLanguages(controller.signal).then(setMachineLangs)
+    return () => controller.abort()
+  }, [])
+
+  const languageOptions = useMemo(
+    () => languages.map((item) => (item.machine ? { ...item, enabled: machineLangs.includes(item.code) } : item)),
+    [machineLangs],
+  )
 
   useEffect(() => () => {
     if (avatarVideoRef.current) URL.revokeObjectURL(avatarVideoRef.current)
@@ -128,6 +142,18 @@ export default function App() {
     updateMessages((prev) => [...prev, { role: 'user', text: clean }])
     setInput('')
     updateState('thinking')
+
+    // Staged Pacific languages: machine translation only. Niue never takes this path.
+    if (language !== 'niu' && machineLangs.includes(language)) {
+      try {
+        const translated = await translateMachine({ text: clean, target: language })
+        updateMessages((prev) => [...prev, { role: 'storm', text: translated.text, machine: translated.language }])
+      } catch {
+        updateMessages((prev) => [...prev, { role: 'storm', text: 'Machine translation is unavailable right now. Please try again shortly.' }])
+      }
+      updateState('idle')
+      return
+    }
 
     const result = await askStorm({
       message: clean,
@@ -345,7 +371,7 @@ export default function App() {
           <div className="workspace__tools">
             <ModeToggle mode={mode} onChange={handleModeChange} />
             <span className={`status-pill status-pill--${state}`}><i />{stateLabels[state]}</span>
-            <LanguagePicker selected={language} onChange={setLanguage} />
+            <LanguagePicker selected={language} onChange={setLanguage} options={languageOptions} />
           </div>
         </header>
 
@@ -392,6 +418,9 @@ export default function App() {
                   <div className="thread-message">
                     {message.role === 'storm' && <strong>STORM</strong>}
                     <p>{message.text}</p>
+                    {message.machine && (
+                      <small className="machine-note">Machine translation to {message.machine} · not community verified</small>
+                    )}
                     {message.role === 'storm' && message.webSources?.length > 0 && (
                       <div className="thread-sources">
                         {message.webSources.slice(0, 3).map((source) => (

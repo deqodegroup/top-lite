@@ -2,9 +2,9 @@ import { Check, ChevronDown, Globe2 } from 'lucide-react'
 import { useState } from 'react'
 import { languages } from '../data/languages'
 
-export default function LanguagePicker({ selected, onChange }) {
+export default function LanguagePicker({ selected, onChange, options = languages }) {
   const [open, setOpen] = useState(false)
-  const current = languages.find((language) => language.code === selected)
+  const current = options.find((language) => language.code === selected)
 
   function choose(language) {
     if (!language.enabled) return
@@ -19,7 +19,7 @@ export default function LanguagePicker({ selected, onChange }) {
       </button>
       <div className="language-menu" role="menu" aria-hidden={!open}>
         <div className="language-menu__title">Language</div>
-        {languages.map((language) => (
+        {options.map((language) => (
           <button
             key={language.code}
             type="button"
@@ -28,7 +28,7 @@ export default function LanguagePicker({ selected, onChange }) {
             className={selected === language.code ? 'active' : ''}
           >
             <span className="language-menu__name"><Globe2 size={15}/>{language.short}</span>
-            {selected === language.code ? <Check size={16}/> : !language.enabled ? <small>Soon</small> : null}
+            {selected === language.code ? <Check size={16}/> : !language.enabled ? <small>Soon</small> : language.machine ? <small>Beta</small> : null}
           </button>
         ))}
       </div>

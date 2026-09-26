@@ -1,5 +1,18 @@
 # TOP Lite — Design Source of Truth
 
+## Founder decision — 2026-09-26 (supersedes the conflicting rules below)
+The Founder chose the **"Moana" ocean-black canvas with Apple Liquid Glass materials** and a living particle STORM orb, for the October Niue Language Week demo. Implemented in `src/styles/moana.css` (theme layer, loaded last) and `src/components/StormOrb.jsx` (WebGL, CSS orb kept as fallback).
+
+Superseded by this decision:
+- "White / near-white canvas" -> ocean-black `#0B0914` with purple/teal radial light.
+- "No noisy particles" / "random particles" -> the STORM orb is a fine, deliberate particle sphere (7,500 points desktop, 2,600 mobile). Still no decorative particles elsewhere.
+- "No neon glow" -> glow stays restrained; gold `#C9A84C` is the single accent, purple `#6B35A8` primary action, teal `#1BBFBF` listening.
+- Typography: system stack for the interface; Cormorant Garamond only for the welcome headline.
+
+Still in force: Apple Design Option, restrained Liquid Glass (heavy glass for structural surfaces, light glass for controls, never light-on-light), reduced-motion / reduced-transparency / high-contrast fallbacks, calm copy, STORM as the visual centrepiece.
+
+The old light theme remains in `global.css` / `future.css`; reverting = remove the `moana.css` import in `src/main.jsx`.
+
 ## Selected design system
 TOP Lite deliberately opts into the reusable Apple Design Option from `deqodegroup/dq-universal/skills/apple-design/SKILL.md`.
 
